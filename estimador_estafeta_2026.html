@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estimador Estafeta 2026</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0e0f13">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Estafeta">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0e0f13;
+    --surface: #16181f;
+    --surface2: #1e2029;
+    --border: #2a2d3a;
+    --accent: #e8ff47;
+    --accent2: #47c8ff;
+    --red: #ff5c5c;
+    --green: #47ffb2;
+    --text: #e8eaf0;
+    --muted: #6b7088;
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-box {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: #0e0f13;
+    font-size: 14px;
+  }
+  .brand-text {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+  .brand-text span {
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .header-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+
+  /* Layout */
+  .main {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    min-height: calc(100vh - 61px);
+  }
+
+  /* Panel izquierdo */
+  .panel {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+    align-self: start;
+    position: sticky;
+    top: 0;
+    max-height: calc(100vh - 61px);
+  }
+
+  .panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  label {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  select, input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+  }
+
+  select:focus, input:focus {
+    border-color: var(--accent);
+  }
+
+  .select-wrap {
+    position: relative;
+  }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+    font-size: 12px;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .divider-icon {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  /* Peso inputs */
+  .peso-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .input-unit {
+    position: relative;
+  }
+  .input-unit input {
+    padding-right: 40px;
+  }
+  .unit-tag {
+    position: absolute;
+    right: 12px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    pointer-events: none;
+  }
+
+  /* Calculador dimensional */
+  .dim-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  .dim-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 12px;
+    transition: border-color 0.3s;
+  }
+  .dim-result.has-value {
+    border-color: rgba(71, 200, 255, 0.4);
+  }
+  .dim-result-label {
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+  }
+  .dim-result-value {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--accent2);
+    font-size: 13px;
+  }
+  .dim-formula {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    text-align: center;
+    padding: 2px 0;
+    letter-spacing: 0.3px;
+  }
+
+  /* Toggle descuento */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .toggle-label {
+    font-size: 13px;
+    color: var(--text);
+  }
+  .toggle-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+  .toggle-switch {
+    position: relative;
+    width: 40px; height: 22px;
+    cursor: pointer;
+  }
+  .toggle-switch input { display: none; }
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 11px;
+    transition: background 0.2s;
+  }
+  .toggle-thumb {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 16px; height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle-switch input:checked ~ .toggle-track { background: var(--accent); }
+  .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(18px); }
+
+  /* Botón calcular */
+  .btn-calc {
+    background: var(--accent);
+    color: #0e0f13;
+    border: none;
+    border-radius: var(--radius);
+    padding: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: 0.2px;
+  }
+  .btn-calc:hover { opacity: 0.9; }
+  .btn-calc:active { transform: scale(0.99); }
+
+  /* Panel derecho - Resultados */
+  .results-panel {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* Estado vacío */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    opacity: 0.4;
+  }
+  .empty-icon {
+    font-size: 48px;
+  }
+  .empty-text {
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* Resultado principal */
+  .result-hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .result-hero.visible { display: flex; }
+
+  .result-route {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .route-city {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .route-arrow {
+    color: var(--accent);
+    font-size: 20px;
+  }
+
+  .result-price-block {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .price-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .price-label {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .price-value {
+    font-size: 42px;
+    font-weight: 600;
+    letter-spacing: -1.5px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .price-value .currency {
+    font-size: 22px;
+    font-weight: 400;
+    opacity: 0.7;
+    margin-right: 4px;
+  }
+
+  /* Chips de info */
+  .info-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+  }
+  .chip-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .chip-dot.blue { background: var(--accent2); }
+  .chip-dot.red { background: var(--red); }
+
+  /* Desglose de precios */
+  .breakdown {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    display: none;
+  }
+  .breakdown.visible { display: block; }
+
+  .breakdown-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .breakdown-grid {
+    display: grid;
+  }
+
+  .breakdown-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    transition: background 0.1s;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-row:hover { background: var(--surface2); }
+  .breakdown-row.active {
+    background: rgba(232, 255, 71, 0.06);
+    border-left: 3px solid var(--accent);
+  }
+
+  .tramo-name {
+    font-size: 13px;
+    color: var(--text);
+  }
+  .tramo-base {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+  .tramo-final {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: right;
+    font-family: 'DM Mono', monospace;
+  }
+  .tramo-final.highlighted { color: var(--accent); }
+
+  /* Tabla comparativa */
+  .compare-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    display: none;
+  }
+  .compare-section.visible { display: block; }
+
+  .compare-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .compare-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    align-items: center;
+  }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-row.header-row {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    padding: 10px 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .compare-row.active { background: rgba(232, 255, 71, 0.04); }
+  .val-sin { color: var(--muted); font-family: 'DM Mono', monospace; }
+  .val-con { color: var(--accent); font-family: 'DM Mono', monospace; font-weight: 500; }
+
+  /* Error */
+  .error-box {
+    background: rgba(255, 92, 92, 0.08);
+    border: 1px solid rgba(255, 92, 92, 0.3);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--red);
+    display: none;
+  }
+  .error-box.visible { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-brand">
+    <div class="logo-box">ES</div>
+    <div class="brand-text">Estimador Estafeta <span>/ SERVI-ALL</span></div>
+  </div>
+  <div class="header-badge">TARIFA 2026</div>
+</div>
+
+<div class="main">
+  <!-- Panel de inputs -->
+  <div class="panel">
+
+    <div class="panel-section">
+      <div class="section-label">Ruta</div>
+      <div class="field-group">
+        <label>Ciudad de origen</label>
+        <div class="select-wrap">
+          <select id="origen" onchange="actualizarRamales()">
+            <option value="">Seleccionar origen...</option>
+            <option value="SANTIAGO">Santiago</option>
+            <option value="ANTOFAGASTA">Antofagasta</option>
+            <option value="IQUIQUE">Iquique</option>
+            <option value="CALAMA">Calama</option>
+            <option value="COPIAPO">Copiapó</option>
+            <option value="LA SERENA/COQUIMBO">La Serena / Coquimbo</option>
+            <option value="VIÑA DEL MAR/VALPARAISO">Viña del Mar / Valparaíso</option>
+            <option value="RANCAGUA">Rancagua</option>
+            <option value="CURICO">Curicó</option>
+            <option value="TALCA">Talca</option>
+            <option value="CHILLAN">Chillán</option>
+            <option value="CONCEPCION">Concepción</option>
+            <option value="LOS ANGELES">Los Ángeles</option>
+            <option value="TEMUCO">Temuco</option>
+            <option value="VALDIVIA">Valdivia</option>
+            <option value="OSORNO">Osorno</option>
+            <option value="PUERTO MONTT">Puerto Montt</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="divider">
+        <span class="divider-icon">↕</span>
+      </div>
+
+      <div class="field-group">
+        <label>Ciudad de destino</label>
+        <div class="select-wrap">
+          <select id="destino" onchange="actualizarRamales()">
+            <option value="">Seleccionar destino...</option>
+            <option value="ARICA">Arica</option>
+            <option value="IQUIQUE">Iquique</option>
+            <option value="CALAMA">Calama</option>
+            <option value="ANTOFAGASTA">Antofagasta</option>
+            <option value="COPIAPO">Copiapó</option>
+            <option value="SERENA">La Serena / Coquimbo</option>
+            <option value="SANTIAGO">Santiago</option>
+            <option value="VALPARAISO">Valparaíso / Viña del Mar</option>
+            <option value="RANCAGUA">Rancagua</option>
+            <option value="CURICO">Curicó</option>
+            <option value="TALCA">Talca</option>
+            <option value="CHILLAN">Chillán</option>
+            <option value="CONCEPCION">Concepción</option>
+            <option value="LOS_ANGELES">Los Ángeles</option>
+            <option value="TEMUCO">Temuco</option>
+            <option value="VALDIVIA">Valdivia</option>
+            <option value="OSORNO">Osorno</option>
+            <option value="PUERTO_MONTT">Puerto Montt</option>
+            <option value="COYHAIQUE">Coyhaique</option>
+            <option value="PUNTA_ARENAS">Punta Arenas</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Selector de ramales (aparece solo cuando origen=destino) -->
+      <div class="field-group" id="ramalSection" style="display:none; margin-top:12px;">
+        <label>Destino específico (ramal)</label>
+        <div class="select-wrap">
+          <select id="ramalSelect" onchange="aplicarRamal()">
+            <option value="0">Ciudad principal (sin ramal)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-label">Peso del envío</div>
+      <div class="field-group">
+        <label>Peso real</label>
+        <div class="input-unit">
+          <input type="number" id="pesoReal" min="0" step="0.1" placeholder="0.0">
+          <span class="unit-tag">kg</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-label">Dimensiones del bulto</div>
+      <div class="dim-grid">
+        <div class="field-group">
+          <label>Alto</label>
+          <div class="input-unit">
+            <input type="number" id="dimAlto" min="0" step="1" placeholder="0" oninput="calcularVolumen()">
+            <span class="unit-tag">cm</span>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Largo</label>
+          <div class="input-unit">
+            <input type="number" id="dimLargo" min="0" step="1" placeholder="0" oninput="calcularVolumen()">
+            <span class="unit-tag">cm</span>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Ancho</label>
+          <div class="input-unit">
+            <input type="number" id="dimAncho" min="0" step="1" placeholder="0" oninput="calcularVolumen()">
+            <span class="unit-tag">cm</span>
+          </div>
+        </div>
+      </div>
+      <div class="dim-formula">Alto × Largo × Ancho ÷ 4.000</div>
+      <div class="dim-result" id="dimResult">
+        <span class="dim-result-label">Peso volumétrico</span>
+        <span class="dim-result-value" id="dimResultValue">— kg</span>
+      </div>
+      <div class="field-group">
+        <label>Peso volumétrico <span style="color:var(--muted); font-size:11px;">(calculado o ingresa manual)</span></label>
+        <div class="input-unit">
+          <input type="number" id="pesoVol" min="0" step="0.1" placeholder="0.0">
+          <span class="unit-tag">kg</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-label">Configuración</div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Descuento corporativo</div>
+          <div class="toggle-sub">20% sobre tarifa base</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="descuento" checked>
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+      <div class="field-group" style="margin-top: 12px;">
+        <label>Cargo adicional ramal <span style="color:var(--muted); font-size:11px;">(opcional - ver PDF Ramales 2026)</span></label>
+        <div class="input-unit">
+          <input type="number" id="cargoRamal" min="0" step="1" placeholder="0">
+          <span class="unit-tag">$</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="calcular()">Calcular tarifa</button>
+
+    <div class="error-box" id="errorBox"></div>
+
+  </div>
+
+  <!-- Panel de resultados -->
+  <div class="results-panel">
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">📦</div>
+      <div class="empty-text">Ingresa los datos del envío<br>para calcular la tarifa</div>
+    </div>
+
+    <!-- Hero resultado -->
+    <div class="result-hero" id="resultHero">
+      <div class="result-route">
+        <div>
+          <div style="font-size:11px; color: var(--muted); font-family:'DM Mono',monospace; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Ruta</div>
+          <div class="route-city" id="resOrigen">—</div>
+        </div>
+        <div class="route-arrow">→</div>
+        <div>
+          <div style="font-size:11px; color: var(--muted); font-family:'DM Mono',monospace; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Destino</div>
+          <div class="route-city" id="resDestino">—</div>
+        </div>
+      </div>
+
+      <div class="result-price-block">
+        <div class="price-main">
+          <div class="price-label" id="priceLabel">PRECIO FINAL (con 20% desc)</div>
+          <div class="price-value"><span class="currency">$</span><span id="precioFinal">0</span></div>
+        </div>
+      </div>
+
+      <div class="info-chips" id="infoChips">
+        <div class="chip"><div class="chip-dot"></div><span id="chipPeso">—</span></div>
+        <div class="chip"><div class="chip-dot blue"></div><span id="chipTramo">—</span></div>
+        <div class="chip"><div class="chip-dot red"></div><span id="chipBase">—</span></div>
+      </div>
+    </div>
+
+    <!-- Desglose por tramos -->
+    <div class="breakdown" id="breakdown">
+      <div class="breakdown-header">Desglose de tarifas por tramo</div>
+      <div class="breakdown-grid" id="breakdownGrid"></div>
+    </div>
+
+    <!-- Comparativa con/sin descuento -->
+    <div class="compare-section" id="compareSection">
+      <div class="compare-header">Comparativa de precios</div>
+      <div class="compare-row header-row">
+        <span>Tramo</span>
+        <span>Sin descuento</span>
+        <span>Con 20% desc.</span>
+      </div>
+      <div id="compareGrid"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ============================================================
+// BASE DE DATOS TARIFAS 2026 (extraídas del PDF oficial)
+// Valores SIN descuento — aplicar × 0.80 para precio final
+// ============================================================
+
+const TARIFAS = {
+  "SANTIAGO": {
+    "ARICA":      {carta:13263,v5:36281,v10:41137,v15:47540,v20:53051,v25:58111,v30:63375,v35:68435,v40:73944,v45:78872,v50:84380,e100:1145,e500:987,e500p:902},
+    "IQUIQUE":    {carta:12652,v5:30094,v10:33574,v15:39491,v20:43791,v25:47362,v30:52028,v35:56498,v40:60799,v45:64830,v50:69373,e100:915,e500:797,e500p:719},
+    "CALAMA":     {carta:10748,v5:29070,v10:32964,v15:38095,v20:42510,v25:46567,v30:50786,v35:54841,v40:60675,v45:63205,v50:67619,e100:745,e500:706,e500p:601},
+    "ANTOFAGASTA":{carta:9273, v5:26131,v10:29174,v15:34322,v20:38044,v25:41691,v30:45288,v35:49154,v40:53091,v45:56256,v50:60266,e100:653,e500:575,e500p:549},
+    "COPIAPO":    {carta:7461, v5:15312,v10:16713,v15:19829,v20:22125,v25:24444,v30:26810,v35:28912,v40:31227,v45:33546,v50:35699,e100:549,e500:484,e500p:457},
+    "SERENA":     {carta:5948, v5:10412,v10:12328,v15:13550,v20:15411,v25:16895,v30:18597,v35:19819,v40:21388,v45:23220,v50:24736,e100:470,e500:412,e500p:386},
+    "SANTIAGO":   {carta:3907, v5:6035, v10:6713, v15:7990, v20:9391, v25:10767,v30:12168,v35:13569,v40:14968,v45:16373,v50:17772,e100:299,e500:276,e500p:248},
+    "VALPARAISO": {carta:4754, v5:7094, v10:7840, v15:9244, v20:10785,v25:12299,v30:13840,v35:15381,v40:16921,v45:18466,v50:20005,e100:344,e500:318,e500p:287},
+    "RANCAGUA":   {carta:4192, v5:6256, v10:6913, v15:8152, v20:9511, v25:10846,v30:12204,v35:13563,v40:14921,v45:16284,v50:17641,e100:303,e500:280,e500p:254},
+    "CURICO":     {carta:4526, v5:6755, v10:7465, v15:8802, v20:10269,v25:11711,v30:13178,v35:14645,v40:16111,v45:17582,v50:19048,e100:327,e500:302,e500p:274},
+    "TALCA":      {carta:4765, v5:7110, v10:7858, v15:9265, v20:10810,v25:12327,v30:13872,v35:15416,v40:16959,v45:18508,v50:20051,e100:344,e500:318,e500p:288},
+    "CHILLAN":    {carta:5241, v5:7821, v10:8644, v15:10192,v20:11891,v25:13560,v30:15259,v35:16958,v40:18655,v45:20359,v50:22056,e100:379,e500:350,e500p:317},
+    "CONCEPCION": {carta:5765, v5:8603, v10:9508, v15:11211,v20:13080,v25:14916,v30:16785,v35:18653,v40:20520,v45:22394,v50:24262,e100:417,e500:385,e500p:349},
+    "LOS_ANGELES":{carta:6053, v5:9033, v10:9983, v15:11772,v20:13734,v25:15661,v30:17624,v35:19586,v40:21546,v45:23514,v50:25475,e100:437,e500:405,e500p:366},
+    "TEMUCO":     {carta:6538, v5:9756, v10:10782,v15:12713,v20:14833,v25:16914,v30:19034,v35:21153,v40:23270,v45:25395,v50:27513,e100:472,e500:437,e500p:395},
+    "VALDIVIA":   {carta:7061, v5:10537,v10:11645,v15:13731,v20:16019,v25:18268,v30:20556,v35:22845,v40:25132,v45:27427,v50:29714,e100:510,e500:472,e500p:427},
+    "OSORNO":     {carta:7625, v5:11379,v10:12576,v15:14829,v20:17301,v25:19729,v30:22201,v35:24673,v40:27142,v45:29621,v50:32091,e100:551,e500:510,e500p:461},
+    "PUERTO_MONTT":{carta:8541,v5:12745,v10:14085,v15:16608,v20:19377,v25:22096,v30:24865,v35:27633,v40:30399,v45:33176,v50:35942,e100:617,e500:571,e500p:517},
+    "COYHAIQUE":  {carta:28408,v5:30739,v10:35192,v15:38141,v20:44991,v25:51684,v30:60091,v35:68342,v40:77682,v45:87022,v50:95741,e100:1556,e500:1501,e500p:1369},
+    "PUNTA_ARENAS":{carta:28184,v5:30494,v10:34911,v15:37838,v20:44633,v25:51274,v30:59614,v35:67799,v40:77066,v45:86332,v50:94981,e100:1853,e500:1787,e500p:1631},
+  },
+  "IQUIQUE": {
+    "ARICA":      {carta:4467,v5:6899,v10:7675,v15:9134,v20:10736,v25:12309,v30:13911,v35:15512,v40:17113,v45:18719,v50:20319,e100:342,e500:315,e500p:284},
+    "IQUIQUE":    {carta:3907,v5:6035,v10:6713,v15:7990,v20:9391,v25:10767,v30:12168,v35:13569,v40:14968,v45:16373,v50:17772,e100:299,e500:276,e500p:248},
+    "CALAMA":     {carta:4298,v5:6638,v10:7384,v15:8789,v20:10330,v25:11843,v30:13384,v35:14925,v40:16465,v45:18010,v50:19550,e100:329,e500:303,e500p:273},
+    "ANTOFAGASTA":{carta:4611,v5:7121,v10:7921,v15:9428,v20:11081,v25:12705,v30:14358,v35:16011,v40:17662,v45:19320,v50:20972,e100:353,e500:325,e500p:293},
+    "COPIAPO":    {carta:5861,v5:9052,v10:10070,v15:11985,v20:14086,v25:16150,v30:18251,v35:20353,v40:22452,v45:24559,v50:26659,e100:449,e500:414,e500p:372},
+    "SERENA":     {carta:9768,v5:15087,v10:16783,v15:19974,v20:23477,v25:26917,v30:30419,v35:33921,v40:37420,v45:40932,v50:44431,e100:748,e500:689,e500p:621},
+    "SANTIAGO":   {carta:12652,v5:30094,v10:33574,v15:39491,v20:43791,v25:47362,v30:52028,v35:56498,v40:60799,v45:64830,v50:69373,e100:915,e500:797,e500p:719},
+    "VALPARAISO": {carta:17406,v5:37188,v10:41414,v15:48736,v20:54576,v25:59661,v30:65868,v35:71879,v40:77719,v45:83296,v50:89378,e100:1258,e500:1115,e500p:1006},
+    "RANCAGUA":   {carta:16844,v5:36350,v10:40488,v15:47643,v20:53302,v25:58208,v30:64232,v35:70061,v40:75720,v45:81114,v50:87014,e100:1218,e500:1077,e500p:972},
+    "CURICO":     {carta:17179,v5:36849,v10:41039,v15:48294,v20:54060,v25:59073,v30:65206,v35:71143,v40:76910,v45:82413,v50:88421,e100:1242,e500:1100,e500p:992},
+    "TALCA":      {carta:17417,v5:37204,v10:41432,v15:48757,v20:54601,v25:59689,v30:65899,v35:71914,v40:77758,v45:83338,v50:89424,e100:1259,e500:1116,e500p:1007},
+    "CHILLAN":    {carta:17893,v5:37915,v10:42218,v15:49683,v20:55682,v25:60922,v30:67286,v35:73456,v40:79454,v45:85189,v50:91429,e100:1294,e500:1147,e500p:1036},
+    "CONCEPCION": {carta:18418,v5:38698,v10:43082,v15:50703,v20:56871,v25:62278,v30:68812,v35:75152,v40:81319,v45:87225,v50:93634,e100:1331,e500:1182,e500p:1067},
+    "LOS_ANGELES":{carta:18706,v5:39128,v10:43558,v15:51263,v20:57525,v25:63024,v30:69651,v35:76084,v40:82345,v45:88345,v50:94847,e100:1352,e500:1202,e500p:1085},
+    "TEMUCO":     {carta:19190,v5:39850,v10:44356,v15:52205,v20:58624,v25:64277,v30:71061,v35:77651,v40:84069,v45:90226,v50:96885,e100:1387,e500:1234,e500p:1114},
+    "VALDIVIA":   {carta:19713,v5:40631,v10:45219,v15:53222,v20:59810,v25:65630,v30:72584,v35:79343,v40:85931,v45:92257,v50:99086,e100:1425,e500:1269,e500p:1146},
+    "OSORNO":     {carta:20278,v5:41474,v10:46150,v15:54321,v20:61092,v25:67091,v30:74228,v35:81171,v40:87941,v45:94451,v50:101463,e100:1466,e500:1307,e500p:1180},
+    "PUERTO_MONTT":{carta:21193,v5:42839,v10:47660,v15:56100,v20:63168,v25:69459,v30:76893,v35:84132,v40:91198,v45:98006,v50:105314,e100:1532,e500:1368,e500p:1235},
+    "COYHAIQUE":  {carta:41060,v5:60833,v10:68766,v15:77632,v20:88782,v25:99046,v30:112119,v35:124840,v40:138481,v45:151852,v50:165114,e100:2655,e500:2457,e500p:2233},
+    "PUNTA_ARENAS":{carta:40836,v5:60588,v10:68485,v15:77329,v20:88424,v25:98636,v30:111641,v35:124297,v40:137864,v45:151162,v50:164353,e100:2768,e500:2584,e500p:2350},
+  },
+  "CALAMA": {
+    "ARICA":      {carta:4914,v5:7589,v10:8442,v15:10048,v20:11810,v25:13540,v30:15302,v35:17064,v40:18824,v45:20590,v50:22351,e100:376,e500:347,e500p:312},
+    "IQUIQUE":    {carta:4298,v5:6638,v10:7384,v15:8789,v20:10330,v25:11843,v30:13384,v35:14925,v40:16465,v45:18010,v50:19550,e100:329,e500:303,e500p:273},
+    "CALAMA":     {carta:3907,v5:6035,v10:6713,v15:7990,v20:9391,v25:10767,v30:12168,v35:13569,v40:14968,v45:16373,v50:17772,e100:299,e500:276,e500p:248},
+    "ANTOFAGASTA":{carta:4103,v5:6337,v10:7049,v15:8389,v20:9860,v25:11305,v30:12776,v35:14247,v40:15716,v45:17192,v50:18661,e100:314,e500:290,e500p:261},
+    "COPIAPO":    {carta:4376,v5:6759,v10:7519,v15:8949,v20:10518,v25:12059,v30:13628,v35:15197,v40:16764,v45:18338,v50:19905,e100:335,e500:309,e500p:278},
+    "SERENA":     {carta:4767,v5:7362,v10:8190,v15:9748,v20:11457,v25:13135,v30:14844,v35:16554,v40:18261,v45:19975,v50:21682,e100:365,e500:336,e500p:303},
+    "SANTIAGO":   {carta:10748,v5:29070,v10:32964,v15:38095,v20:42510,v25:46567,v30:50786,v35:54841,v40:60675,v45:63205,v50:67619,e100:745,e500:706,e500p:601},
+    "VALPARAISO": {carta:15502,v5:36164,v10:40804,v15:47339,v20:53296,v25:58866,v30:64626,v35:70222,v40:77595,v45:81671,v50:87624,e100:1088,e500:1023,e500p:889},
+    "RANCAGUA":   {carta:14940,v5:35325,v10:39877,v15:46246,v20:52021,v25:57412,v30:62991,v35:68404,v40:75596,v45:79488,v50:85260,e100:1048,e500:986,e500p:855},
+    "CURICO":     {carta:15275,v5:35824,v10:40429,v15:46897,v20:52780,v25:58277,v30:63964,v35:69486,v40:76786,v45:80787,v50:86667,e100:1072,e500:1008,e500p:875},
+    "TALCA":      {carta:15513,v5:36180,v10:40822,v15:47360,v20:53320,v25:58894,v30:64658,v35:70257,v40:77634,v45:81713,v50:87670,e100:1089,e500:1024,e500p:889},
+    "CHILLAN":    {carta:15989,v5:36891,v10:41608,v15:48287,v20:54401,v25:60126,v30:66045,v35:71799,v40:79330,v45:83563,v50:89675,e100:1124,e500:1056,e500p:918},
+    "CONCEPCION": {carta:16514,v5:37673,v10:42472,v15:49306,v20:55590,v25:61482,v30:67571,v35:73495,v40:81195,v45:85599,v50:91881,e100:1162,e500:1091,e500p:950},
+    "LOS_ANGELES":{carta:16802,v5:38103,v10:42947,v15:49866,v20:56244,v25:62228,v30:68410,v35:74427,v40:82221,v45:86719,v50:93094,e100:1182,e500:1110,e500p:967},
+    "TEMUCO":     {carta:17286,v5:38826,v10:43746,v15:50808,v20:57343,v25:63481,v30:69820,v35:75994,v40:83945,v45:88600,v50:95132,e100:1217,e500:1143,e500p:997},
+    "VALDIVIA":   {carta:17809,v5:39606,v10:44609,v15:51825,v20:58530,v25:64834,v30:71343,v35:77686,v40:85807,v45:90632,v50:97333,e100:1255,e500:1178,e500p:1028},
+    "OSORNO":     {carta:18374,v5:40449,v10:45540,v15:52924,v20:59811,v25:66295,v30:72987,v35:79514,v40:87817,v45:92826,v50:99710,e100:1296,e500:1215,e500p:1062},
+    "PUERTO_MONTT":{carta:19289,v5:41815,v10:47049,v15:54703,v20:61887,v25:68663,v30:75651,v35:82475,v40:91074,v45:96380,v50:103561,e100:1362,e500:1276,e500p:1118},
+    "COYHAIQUE":  {carta:39156,v5:59809,v10:68156,v15:76236,v20:87501,v25:98251,v30:110877,v35:123183,v40:138357,v45:150227,v50:163360,e100:2451,e500:2348,e500p:2092},
+    "PUNTA_ARENAS":{carta:38932,v5:59564,v10:67875,v15:75932,v20:87143,v25:97841,v30:110400,v35:122640,v40:137740,v45:149537,v50:162600,e100:2598,e500:2493,e500p:2232},
+  },
+  "ANTOFAGASTA": {
+    "ARICA":      {carta:5271,v5:8141,v10:9056,v15:10779,v20:12669,v25:14525,v30:16415,v35:18305,v40:20193,v45:22088,v50:23976,e100:404,e500:372,e500p:335},
+    "IQUIQUE":    {carta:4611,v5:7121,v10:7921,v15:9428,v20:11081,v25:12705,v30:14358,v35:16011,v40:17662,v45:19320,v50:20972,e100:353,e500:325,e500p:293},
+    "CALAMA":     {carta:4103,v5:6337,v10:7049,v15:8389,v20:9860,v25:11305,v30:12776,v35:14247,v40:15716,v45:17192,v50:18661,e100:314,e500:290,e500p:261},
+    "ANTOFAGASTA":{carta:3907,v5:6035,v10:6713,v15:7990,v20:9391,v25:10767,v30:12168,v35:13569,v40:14968,v45:16373,v50:17772,e100:299,e500:276,e500p:248},
+    "COPIAPO":    {carta:5666,v5:8750,v10:9734,v15:11585,v20:13616,v25:15612,v30:17643,v35:19674,v40:21704,v45:23741,v50:25770,e100:434,e500:400,e500p:360},
+    "SERENA":     {carta:5939,v5:9173,v10:10204,v15:12144,v20:14274,v25:16365,v30:18495,v35:20624,v40:22751,v45:24887,v50:27014,e100:455,e500:419,e500p:377},
+    "SANTIAGO":   {carta:9273,v5:26131,v10:29174,v15:34322,v20:38044,v25:41691,v30:45288,v35:49154,v40:53091,v45:56256,v50:60266,e100:653,e500:575,e500p:549},
+    "VALPARAISO": {carta:14027,v5:33225,v10:37014,v15:43566,v20:48829,v25:53990,v30:59129,v35:64535,v40:70012,v45:74722,v50:80271,e100:997,e500:893,e500p:836},
+    "RANCAGUA":   {carta:13465,v5:32386,v10:36088,v15:42474,v20:47554,v25:52536,v30:57493,v35:62717,v40:68012,v45:72540,v50:77907,e100:956,e500:855,e500p:802},
+    "CURICO":     {carta:13799,v5:32885,v10:36639,v15:43124,v20:48313,v25:53402,v30:58466,v35:63799,v40:69202,v45:73839,v50:79314,e100:981,e500:877,e500p:823},
+    "TALCA":      {carta:14038,v5:33241,v10:37032,v15:43587,v20:48853,v25:54018,v30:59160,v35:64570,v40:70050,v45:74764,v50:80317,e100:998,e500:893,e500p:837},
+    "CHILLAN":    {carta:14514,v5:33952,v10:37818,v15:44514,v20:49934,v25:55251,v30:60547,v35:66112,v40:71746,v45:76615,v50:82322,e100:1032,e500:925,e500p:866},
+    "CONCEPCION": {carta:15038,v5:34734,v10:38682,v15:45533,v20:51124,v25:56607,v30:62073,v35:67807,v40:73612,v45:78651,v50:84527,e100:1070,e500:960,e500p:898},
+    "LOS_ANGELES":{carta:15326,v5:35164,v10:39158,v15:46094,v20:51778,v25:57352,v30:62912,v35:68740,v40:74638,v45:79771,v50:85740,e100:1091,e500:980,e500p:915},
+    "TEMUCO":     {carta:15811,v5:35887,v10:39956,v15:47035,v20:52876,v25:58605,v30:64322,v35:70307,v40:76362,v45:81652,v50:87778,e100:1126,e500:1012,e500p:944},
+    "VALDIVIA":   {carta:16334,v5:36667,v10:40819,v15:48052,v20:54063,v25:59958,v30:65845,v35:71999,v40:78223,v45:83683,v50:89979,e100:1164,e500:1047,e500p:976},
+    "OSORNO":     {carta:16899,v5:37510,v10:41750,v15:49151,v20:55344,v25:61420,v30:67489,v35:73827,v40:80234,v45:85878,v50:92356,e100:1205,e500:1085,e500p:1010},
+    "PUERTO_MONTT":{carta:17814,v5:38876,v10:43260,v15:50930,v20:57421,v25:63787,v30:70153,v35:76787,v40:83491,v45:89432,v50:96207,e100:1271,e500:1146,e500p:1065},
+    "COYHAIQUE":  {carta:37681,v5:56870,v10:64366,v15:72463,v20:83035,v25:93375,v30:105379,v35:117496,v40:130773,v45:143278,v50:156007,e100:2340,e500:2191,e500p:2028},
+    "PUNTA_ARENAS":{carta:37457,v5:56625,v10:64085,v15:72160,v20:82677,v25:92965,v30:104902,v35:116953,v40:130157,v45:142588,v50:155246,e100:2507,e500:2362,e500p:2180},
+  },
+  "COPIAPO": {
+    "ARICA":      {carta:6701,v5:10349,v10:11512,v15:13702,v20:16104,v25:18464,v30:20866,v35:23269,v40:25669,v45:28078,v50:30478,e100:513,e500:473,e500p:426},
+    "IQUIQUE":    {carta:5861,v5:9052,v10:10070,v15:11985,v20:14086,v25:16150,v30:18251,v35:20353,v40:22452,v45:24559,v50:26659,e100:449,e500:414,e500p:372},
+    "CALAMA":     {carta:4376,v5:6759,v10:7519,v15:8949,v20:10518,v25:12059,v30:13628,v35:15197,v40:16764,v45:18338,v50:19905,e100:335,e500:309,e500p:278},
+    "ANTOFAGASTA":{carta:5666,v5:8750,v10:9734,v15:11585,v20:13616,v25:15612,v30:17643,v35:19674,v40:21704,v45:23741,v50:25770,e100:434,e500:400,e500p:360},
+    "COPIAPO":    {carta:3907,v5:6035,v10:6713,v15:7990,v20:9391,v25:10767,v30:12168,v35:13569,v40:14968,v45:16373,v50:17772,e100:299,e500:276,e500p:248},
+    "SERENA":     {carta:4181,v5:6457,v10:7183,v15:8549,v20:10048,v25:11520,v30:13019,v35:14518,v40:16016,v45:17519,v50:19017,e100:320,e500:295,e500p:266},
+    "SANTIAGO":   {carta:7461,v5:15312,v10:16713,v15:19829,v20:22125,v25:24444,v30:26810,v35:28912,v40:31227,v45:33546,v50:35699,e100:549,e500:484,e500p:457},
+    "VALPARAISO": {carta:12214,v5:22406,v10:24553,v15:29074,v20:32911,v25:36743,v30:40650,v35:44293,v40:48148,v45:52011,v50:55705,e100:892,e500:801,e500p:745},
+    "RANCAGUA":   {carta:11652,v5:21567,v10:23626,v15:27981,v20:31636,v25:35289,v30:39015,v35:42475,v40:46148,v45:49829,v50:53340,e100:852,e500:764,e500p:711},
+    "CURICO":     {carta:11987,v5:22066,v10:24178,v15:28632,v20:32395,v25:36154,v30:39988,v35:43557,v40:47338,v45:51128,v50:54747,e100:876,e500:786,e500p:731},
+    "TALCA":      {carta:12225,v5:22422,v10:24570,v15:29095,v20:32935,v25:36771,v30:40682,v35:44328,v40:48186,v45:52053,v50:55750,e100:893,e500:802,e500p:746},
+    "CHILLAN":    {carta:12702,v5:23133,v10:25356,v15:30021,v20:34016,v25:38003,v30:42069,v35:45869,v40:49882,v45:53904,v50:57755,e100:928,e500:834,e500p:774},
+    "CONCEPCION": {carta:13226,v5:23915,v10:26221,v15:31041,v20:35205,v25:39359,v30:43595,v35:47565,v40:51748,v45:55940,v50:59961,e100:966,e500:869,e500p:806},
+    "LOS_ANGELES":{carta:13514,v5:24345,v10:26696,v15:31601,v20:35859,v25:40105,v30:44434,v35:48498,v40:52774,v45:57060,v50:61174,e100:986,e500:888,e500p:823},
+    "TEMUCO":     {carta:13998,v5:25068,v10:27495,v15:32543,v20:36958,v25:41358,v30:45844,v35:50065,v40:54497,v45:58941,v50:63212,e100:1021,e500:920,e500p:853},
+    "VALDIVIA":   {carta:14521,v5:25848,v10:28357,v15:33560,v20:38145,v25:42711,v30:47367,v35:51757,v40:56359,v45:60973,v50:65413,e100:1059,e500:955,e500p:884},
+    "OSORNO":     {carta:15086,v5:26691,v10:29289,v15:34658,v20:39426,v25:44173,v30:49011,v35:53584,v40:58370,v45:63167,v50:67790,e100:1100,e500:993,e500p:919},
+    "PUERTO_MONTT":{carta:16001,v5:28057,v10:30798,v15:36438,v20:41502,v25:46540,v30:51675,v35:56545,v40:61627,v45:66721,v50:71641,e100:1166,e500:1054,e500p:974},
+    "COYHAIQUE":  {carta:35869,v5:46051,v10:51905,v15:57970,v20:67116,v25:76128,v30:86901,v35:97254,v40:108909,v45:120568,v50:131440,e100:2215,e500:2081,e500p:1919},
+    "PUNTA_ARENAS":{carta:35644,v5:45806,v10:51624,v15:57667,v20:66759,v25:75718,v30:86424,v35:96711,v40:108293,v45:119878,v50:130680,e100:2402,e500:2271,e500p:2088},
+  },
+  "LA SERENA/COQUIMBO": {
+    "ARICA":      {carta:11168,v5:17248,v10:19187,v15:22836,v20:26840,v25:30773,v30:34777,v35:38781,v40:42781,v45:46797,v50:50797,e100:855,e500:788,e500p:710},
+    "IQUIQUE":    {carta:9768,v5:15087,v10:16783,v15:19974,v20:23477,v25:26917,v30:30419,v35:33921,v40:37420,v45:40932,v50:44431,e100:748,e500:689,e500p:621},
+    "CALAMA":     {carta:4767,v5:7362,v10:8190,v15:9748,v20:11457,v25:13135,v30:14844,v35:16554,v40:18261,v45:19975,v50:21682,e100:365,e500:336,e500p:303},
+    "ANTOFAGASTA":{carta:5939,v5:9173,v10:10204,v15:12144,v20:14274,v25:16365,v30:18495,v35:20624,v40:22751,v45:24887,v50:27014,e100:455,e500:419,e500p:377},
+    "COPIAPO":    {carta:4181,v5:6457,v10:7183,v15:8549,v20:10048,v25:11520,v30:13019,v35:14518,v40:16016,v45:17519,v50:19017,e100:320,e500:295,e500p:266},
+    "SERENA":     {carta:3907,v5:6035,v10:6713,v15:7990,v20:9391,v25:10767,v30:12168,v35:13569,v40:14968,v45:16373,v50:17772,e100:299,e500:276,e500p:248},
+    "SANTIAGO":   {carta:5948,v5:10412,v10:12328,v15:13550,v20:15411,v25:16895,v30:18597,v35:19819,v40:21388,v45:23220,v50:24736,e100:470,e500:412,e500p:386},
+    "VALPARAISO": {carta:10702,v5:17506,v10:20168,v15:22794,v20:26197,v25:29194,v30:32437,v35:35200,v40:38309,v45:41685,v50:44742,e100:814,e500:729,e500p:673},
+    "RANCAGUA":   {carta:10140,v5:16667,v10:19241,v15:21702,v20:24922,v25:27740,v30:30801,v35:33382,v40:36309,v45:39503,v50:42377,e100:773,e500:692,e500p:639},
+    "CURICO":     {carta:10475,v5:17166,v10:19793,v15:22352,v20:25681,v25:28605,v30:31775,v35:34464,v40:37499,v45:40802,v50:43784,e100:798,e500:714,e500p:659},
+    "TALCA":      {carta:10713,v5:17522,v10:20186,v15:22815,v20:26221,v25:29222,v30:32468,v35:35235,v40:38347,v45:41727,v50:44787,e100:815,e500:730,e500p:674},
+    "CHILLAN":    {carta:11189,v5:18233,v10:20971,v15:23742,v20:27302,v25:30454,v30:33855,v35:36776,v40:40043,v45:43578,v50:46792,e100:849,e500:762,e500p:702},
+    "CONCEPCION": {carta:11713,v5:19015,v10:21836,v15:24761,v20:28491,v25:31810,v30:35381,v35:38472,v40:41909,v45:45614,v50:48998,e100:887,e500:797,e500p:734},
+    "LOS_ANGELES":{carta:12002,v5:19445,v10:22311,v15:25321,v20:29145,v25:32556,v30:36220,v35:39405,v40:42935,v45:46734,v50:50211,e100:908,e500:816,e500p:752},
+    "TEMUCO":     {carta:12486,v5:20168,v10:23110,v15:26263,v20:30244,v25:33809,v30:37630,v35:40971,v40:44658,v45:48615,v50:52249,e100:943,e500:849,e500p:781},
+    "VALDIVIA":   {carta:13009,v5:20948,v10:23972,v15:27280,v20:31431,v25:35162,v30:39153,v35:42664,v40:46520,v45:50647,v50:54450,e100:981,e500:883,e500p:813},
+    "OSORNO":     {carta:13574,v5:21791,v10:24904,v15:28379,v20:32712,v25:36624,v30:40798,v35:44491,v40:48531,v45:52841,v50:56827,e100:1022,e500:921,e500p:847},
+    "PUERTO_MONTT":{carta:14489,v5:23157,v10:26413,v15:30158,v20:34788,v25:38991,v30:43462,v35:47452,v40:51788,v45:56395,v50:60678,e100:1088,e500:982,e500p:902},
+    "COYHAIQUE":  {carta:34356,v5:41151,v10:47520,v15:51691,v20:60402,v25:68579,v30:78688,v35:88161,v40:99070,v45:110242,v50:120477,e100:2121,e500:1996,e500p:1833},
+    "PUNTA_ARENAS":{carta:34132,v5:40906,v10:47239,v15:51387,v20:60044,v25:68169,v30:78211,v35:87618,v40:98454,v45:109552,v50:119717,e100:2324,e500:2199,e500p:2016},
+  },
+  "CONCEPCION": {
+    "ARICA":      {carta:19028,v5:44884,v10:50645,v15:58751,v20:66131,v25:73027,v30:80160,v35:87088,v40:94464,v45:101266,v50:108642,e100:1562,e500:1372,e500p:1251},
+    "IQUIQUE":    {carta:18418,v5:38698,v10:43082,v15:50703,v20:56871,v25:62278,v30:68812,v35:75152,v40:81319,v45:87225,v50:93634,e100:1331,e500:1182,e500p:1067},
+    "CALAMA":     {carta:16514,v5:37673,v10:42472,v15:49306,v20:55590,v25:61482,v30:67571,v35:73495,v40:81195,v45:85599,v50:91881,e100:1162,e500:1091,e500p:950},
+    "ANTOFAGASTA":{carta:15038,v5:34734,v10:38682,v15:45533,v20:51124,v25:56607,v30:62073,v35:67807,v40:73612,v45:78651,v50:84527,e100:1070,e500:960,e500p:898},
+    "COPIAPO":    {carta:13226,v5:23915,v10:26221,v15:31041,v20:35205,v25:39359,v30:43595,v35:47565,v40:51748,v45:55940,v50:59961,e100:966,e500:869,e500p:806},
+    "SERENA":     {carta:11713,v5:19015,v10:21836,v15:24761,v20:28491,v25:31810,v30:35381,v35:38472,v40:41909,v45:45614,v50:48998,e100:887,e500:797,e500p:734},
+    "SANTIAGO":   {carta:5765,v5:8603,v10:9508,v15:11211,v20:13080,v25:14916,v30:16785,v35:18653,v40:20520,v45:22394,v50:24262,e100:417,e500:385,e500p:349},
+    "VALPARAISO": {carta:10519,v5:15697,v10:17348,v15:20456,v20:23865,v25:27215,v30:30625,v35:34034,v40:37441,v45:40860,v50:44267,e100:760,e500:703,e500p:636},
+    "RANCAGUA":   {carta:6054,v5:9034,v10:9984,v15:11773,v20:13736,v25:15663,v30:17626,v35:19588,v40:21549,v45:23516,v50:25477,e100:437,e500:405,e500p:366},
+    "CURICO":     {carta:5001,v5:7463,v10:8248,v15:9725,v20:11347,v25:12939,v30:14561,v35:16181,v40:17801,v45:19427,v50:21046,e100:380,e500:352,e500p:318},
+    "TALCA":      {carta:5264,v5:7856,v10:8682,v15:10237,v20:11944,v25:13620,v30:15327,v35:17033,v40:18738,v45:20449,v50:22154,e100:380,e500:352,e500p:318},
+    "CHILLAN":    {carta:4983,v5:7435,v10:8217,v15:9689,v20:11305,v25:12891,v30:14506,v35:16121,v40:17735,v45:19355,v50:20968,e100:360,e500:333,e500p:301},
+    "CONCEPCION": {carta:3907,v5:6035,v10:6713,v15:7990,v20:9391,v25:10767,v30:12168,v35:13569,v40:14968,v45:16373,v50:17772,e100:299,e500:276,e500p:248},
+    "LOS_ANGELES":{carta:5042,v5:7524,v10:8315,v15:9805,v20:11439,v25:13044,v30:14679,v35:16313,v40:17946,v45:19585,v50:21218,e100:364,e500:337,e500p:305},
+    "TEMUCO":     {carta:5445,v5:8126,v10:8980,v15:10589,v20:12354,v25:14088,v30:15853,v35:17618,v40:19382,v45:21152,v50:22915,e100:394,e500:364,e500p:329},
+    "VALDIVIA":   {carta:5881,v5:8776,v10:9699,v15:11436,v20:13342,v25:15215,v30:17121,v35:19028,v40:20932,v45:22844,v50:24748,e100:425,e500:393,e500p:356},
+    "OSORNO":     {carta:6351,v5:9478,v10:10475,v15:12351,v20:14410,v25:16432,v30:18491,v35:20550,v40:22607,v45:24671,v50:26728,e100:459,e500:424,e500p:384},
+    "PUERTO_MONTT":{carta:7113,v5:10615,v10:11732,v15:13833,v20:16139,v25:18404,v30:20710,v35:23016,v40:25319,v45:27632,v50:29936,e100:514,e500:475,e500p:430},
+    "COYHAIQUE":  {carta:23661,v5:25602,v10:29311,v15:31767,v20:37473,v25:43047,v30:50049,v35:56922,v40:64701,v45:72480,v50:79742,e100:1296,e500:1250,e500p:1140},
+    "PUNTA_ARENAS":{carta:23474,v5:25398,v10:29077,v15:31515,v20:37175,v25:42706,v30:49652,v35:56469,v40:64187,v45:71905,v50:79109,e100:1544,e500:1489,e500p:1358},
+  },
+  "TEMUCO": {
+    "ARICA":      {carta:19801,v5:46037,v10:51919,v15:60253,v20:67884,v25:75025,v30:82409,v35:89588,v40:97214,v45:104267,v50:111893,e100:1617,e500:1424,e500p:1297},
+    "IQUIQUE":    {carta:19190,v5:39850,v10:44356,v15:52205,v20:58624,v25:64277,v30:71061,v35:77651,v40:84069,v45:90226,v50:96885,e100:1387,e500:1234,e500p:1114},
+    "CALAMA":     {carta:17286,v5:38826,v10:43746,v15:50808,v20:57343,v25:63481,v30:69820,v35:75994,v40:83945,v45:88600,v50:95132,e100:1217,e500:1143,e500p:997},
+    "ANTOFAGASTA":{carta:15811,v5:35887,v10:39956,v15:47035,v20:52876,v25:58605,v30:64322,v35:70307,v40:76362,v45:81652,v50:87778,e100:1126,e500:1012,e500p:944},
+    "COPIAPO":    {carta:13998,v5:25068,v10:27495,v15:32543,v20:36958,v25:41358,v30:45844,v35:50065,v40:54497,v45:58941,v50:63212,e100:1021,e500:920,e500p:853},
+    "SERENA":     {carta:12486,v5:20168,v10:23110,v15:26263,v20:30244,v25:33809,v30:37630,v35:40971,v40:44658,v45:48615,v50:52249,e100:943,e500:849,e500p:781},
+    "SANTIAGO":   {carta:6538,v5:9756,v10:10782,v15:12713,v20:14833,v25:16914,v30:19034,v35:21153,v40:23270,v45:25395,v50:27513,e100:472,e500:437,e500p:395},
+    "VALPARAISO": {carta:11291,v5:16850,v10:18622,v15:21958,v20:25618,v25:29213,v30:32874,v35:36534,v40:40191,v45:43861,v50:47518,e100:816,e500:755,e500p:683},
+    "RANCAGUA":   {carta:6866,v5:10245,v10:11323,v15:13350,v20:15576,v25:17762,v30:19987,v35:22213,v40:24436,v45:26669,v50:28891,e100:496,e500:459,e500p:415},
+    "CURICO":     {carta:5672,v5:8464,v10:9354,v15:11029,v20:12867,v25:14673,v30:16511,v35:18350,v40:20187,v45:22031,v50:23867,e100:431,e500:399,e500p:361},
+    "TALCA":      {carta:5970,v5:8909,v10:9846,v15:11609,v20:13544,v25:15445,v30:17380,v35:19316,v40:21249,v45:23190,v50:25123,e100:431,e500:399,e500p:361},
+    "CHILLAN":    {carta:5650,v5:8432,v10:9319,v15:10988,v20:12819,v25:14619,v30:16450,v35:18282,v40:20112,v45:21948,v50:23778,e100:408,e500:378,e500p:342},
+    "CONCEPCION": {carta:5445,v5:8126,v10:8980,v15:10589,v20:12354,v25:14088,v30:15853,v35:17618,v40:19382,v45:21152,v50:22915,e100:394,e500:364,e500p:329},
+    "LOS_ANGELES":{carta:5415,v5:8081,v10:8930,v15:10530,v20:12285,v25:14010,v30:15765,v35:17520,v40:19274,v45:21034,v50:22788,e100:391,e500:362,e500p:327},
+    "TEMUCO":     {carta:3907,v5:6035,v10:6713,v15:7990,v20:9391,v25:10767,v30:12168,v35:13569,v40:14968,v45:16373,v50:17772,e100:299,e500:276,e500p:248},
+    "VALDIVIA":   {carta:5461,v5:8149,v10:9007,v15:10620,v20:12390,v25:14129,v30:15899,v35:17670,v40:19438,v45:21213,v50:22982,e100:395,e500:365,e500p:330},
+    "OSORNO":     {carta:5898,v5:8801,v10:9727,v15:11469,v20:13381,v25:15259,v30:17171,v35:19083,v40:20993,v45:22910,v50:24820,e100:426,e500:394,e500p:357},
+    "PUERTO_MONTT":{carta:6606,v5:9858,v10:10894,v15:12846,v20:14987,v25:17090,v30:19232,v35:21373,v40:23512,v45:25660,v50:27799,e100:477,e500:441,e500p:399},
+    "COYHAIQUE":  {carta:21972,v5:23775,v10:27219,v15:29500,v20:34798,v25:39975,v30:46477,v35:52859,v40:60083,v45:67307,v50:74051,e100:1203,e500:1161,e500p:1059},
+    "PUNTA_ARENAS":{carta:21799,v5:23586,v10:27002,v15:29266,v20:34521,v25:39658,v30:46108,v35:52439,v40:59606,v45:66773,v50:73463,e100:1433,e500:1382,e500p:1261},
+  },
+  "PUERTO MONTT": {
+    "ARICA":      {carta:21804,v5:49026,v10:55222,v15:64148,v20:72428,v25:80207,v30:88240,v35:96068,v40:104343,v45:112048,v50:120322,e100:1762,e500:1558,e500p:1419},
+    "IQUIQUE":    {carta:21193,v5:42839,v10:47660,v15:56100,v20:63168,v25:69459,v30:76893,v35:84132,v40:91198,v45:98006,v50:105314,e100:1532,e500:1368,e500p:1235},
+    "CALAMA":     {carta:19289,v5:41815,v10:47049,v15:54703,v20:61887,v25:68663,v30:75651,v35:82475,v40:91074,v45:96380,v50:103561,e100:1362,e500:1276,e500p:1118},
+    "ANTOFAGASTA":{carta:17814,v5:38876,v10:43260,v15:50930,v20:57421,v25:63787,v30:70153,v35:76787,v40:83491,v45:89432,v50:96207,e100:1271,e500:1146,e500p:1065},
+    "COPIAPO":    {carta:16001,v5:28057,v10:30798,v15:36438,v20:41502,v25:46540,v30:51675,v35:56545,v40:61627,v45:66721,v50:71641,e100:1166,e500:1054,e500p:974},
+    "SERENA":     {carta:14489,v5:23157,v10:26413,v15:30158,v20:34788,v25:38991,v30:43462,v35:47452,v40:51788,v45:56395,v50:60678,e100:1088,e500:982,e500p:902},
+    "SANTIAGO":   {carta:8541,v5:12745,v10:14085,v15:16608,v20:19377,v25:22096,v30:24865,v35:27633,v40:30399,v45:33176,v50:35942,e100:617,e500:571,e500p:517},
+    "VALPARAISO": {carta:13294,v5:19839,v10:21925,v15:25853,v20:30162,v25:34396,v30:38705,v35:43015,v40:47320,v45:51642,v50:55947,e100:961,e500:888,e500p:804},
+    "RANCAGUA":   {carta:8969,v5:13384,v10:14791,v15:17441,v20:20348,v25:23204,v30:26111,v35:29018,v40:31923,v45:34838,v50:37743,e100:649,e500:599,e500p:543},
+    "CURICO":     {carta:7409,v5:11056,v10:12219,v15:14408,v20:16809,v25:19168,v30:21570,v35:23971,v40:26371,v45:28779,v50:31179,e100:564,e500:521,e500p:472},
+    "TALCA":      {carta:7799,v5:11638,v10:12862,v15:15166,v20:17694,v25:20177,v30:22705,v35:25233,v40:27759,v45:30294,v50:32820,e100:564,e500:521,e500p:472},
+    "CHILLAN":    {carta:7381,v5:11015,v10:12173,v15:14354,v20:16747,v25:19097,v30:21490,v35:23883,v40:26273,v45:28673,v50:31063,e100:533,e500:493,e500p:446},
+    "CONCEPCION": {carta:7113,v5:10615,v10:11732,v15:13833,v20:16139,v25:18404,v30:20710,v35:23016,v40:25319,v45:27632,v50:29936,e100:514,e500:475,e500p:430},
+    "LOS_ANGELES":{carta:7074,v5:10556,v10:11666,v15:13756,v20:16049,v25:18302,v30:20595,v35:22888,v40:25179,v45:27478,v50:29769,e100:511,e500:473,e500p:428},
+    "TEMUCO":     {carta:6606,v5:9858,v10:10894,v15:12846,v20:14987,v25:17090,v30:19232,v35:21373,v40:23512,v45:25660,v50:27799,e100:477,e500:441,e500p:399},
+    "VALDIVIA":   {carta:4638,v5:6921,v10:7649,v15:9019,v20:10523,v25:11999,v30:13503,v35:15006,v40:16508,v45:18016,v50:19518,e100:335,e500:310,e500p:280},
+    "OSORNO":     {carta:5009,v5:7475,v10:8261,v15:9741,v20:11364,v25:12959,v30:14583,v35:16207,v40:17829,v45:19457,v50:21079,e100:362,e500:335,e500p:303},
+    "PUERTO_MONTT":{carta:3907,v5:6035,v10:6713,v15:7990,v20:9391,v25:10767,v30:12168,v35:13569,v40:14968,v45:16373,v50:17772,e100:299,e500:276,e500p:248},
+    "COYHAIQUE":  {carta:18660,v5:20192,v10:23117,v15:25054,v20:29553,v25:33950,v30:39472,v35:44892,v40:51027,v45:57162,v50:62889,e100:1022,e500:986,e500p:899},
+    "PUNTA_ARENAS":{carta:18513,v5:20031,v10:22932,v15:24854,v20:29318,v25:33680,v30:39158,v35:44535,v40:50622,v45:56709,v50:62390,e100:1217,e500:1174,e500p:1071},
+  }
+};
+
+// Nombres para mostrar
+const NOMBRES_ORIGEN = {
+  "SANTIAGO": "Santiago",
+  "ANTOFAGASTA": "Antofagasta",
+  "IQUIQUE": "Iquique",
+  "CALAMA": "Calama",
+  "COPIAPO": "Copiapó",
+  "LA SERENA/COQUIMBO": "La Serena / Coquimbo",
+  "VIÑA DEL MAR/VALPARAISO": "Viña del Mar / Valparaíso",
+  "RANCAGUA": "Rancagua",
+  "CURICO": "Curicó",
+  "TALCA": "Talca",
+  "CHILLAN": "Chillán",
+  "CONCEPCION": "Concepción",
+  "LOS ANGELES": "Los Ángeles",
+  "TEMUCO": "Temuco",
+  "VALDIVIA": "Valdivia",
+  "OSORNO": "Osorno",
+  "PUERTO MONTT": "Puerto Montt"
+};
+
+const NOMBRES_DESTINO = {
+  "ARICA": "Arica",
+  "IQUIQUE": "Iquique",
+  "CALAMA": "Calama",
+  "ANTOFAGASTA": "Antofagasta",
+  "COPIAPO": "Copiapó",
+  "SERENA": "La Serena / Coquimbo",
+  "SANTIAGO": "Santiago",
+  "VALPARAISO": "Valparaíso / Viña del Mar",
+  "RANCAGUA": "Rancagua",
+  "CURICO": "Curicó",
+  "TALCA": "Talca",
+  "CHILLAN": "Chillán",
+  "CONCEPCION": "Concepción",
+  "LOS_ANGELES": "Los Ángeles",
+  "TEMUCO": "Temuco",
+  "VALDIVIA": "Valdivia",
+  "OSORNO": "Osorno",
+  "PUERTO_MONTT": "Puerto Montt",
+  "COYHAIQUE": "Coyhaique",
+  "PUNTA_ARENAS": "Punta Arenas"
+};
+
+// Tramos en orden
+const TRAMOS = [
+  {key:'carta', label:'Carta / Sobre', max:1},
+  {key:'v5',    label:'Hasta 5 kg',    max:5},
+  {key:'v10',   label:'5.1 a 10 kg',   max:10},
+  {key:'v15',   label:'10.1 a 15 kg',  max:15},
+  {key:'v20',   label:'15.1 a 20 kg',  max:20},
+  {key:'v25',   label:'20.1 a 25 kg',  max:25},
+  {key:'v30',   label:'25.1 a 30 kg',  max:30},
+  {key:'v35',   label:'30.1 a 35 kg',  max:35},
+  {key:'v40',   label:'35.1 a 40 kg',  max:40},
+  {key:'v45',   label:'40.1 a 45 kg',  max:45},
+  {key:'v50',   label:'45.1 a 50 kg',  max:50},
+];
+
+// ── Base de datos de RAMALES (destinos dentro de la misma región) ──
+const RAMALES = {
+  "ANTOFAGASTA": [
+    {nombre: 'Aeropuerto Andrés Sabella', valor: 10600},
+    {nombre: 'Mejillones', valor: 30550},
+    {nombre: 'Salar del Carmen SQM', valor: 26520},
+    {nombre: 'Mantos Cooper - Mantos Blancos', valor: 53880},
+    {nombre: 'Parque Eólico Cerro Tigre', valor: 79320},
+    {nombre: 'Hornitos', valor: 100080},
+    {nombre: 'Baquedano (Sierra Gorda)', valor: 108600},
+    {nombre: 'Michilla', valor: 159000},
+    {nombre: 'Minera Lomas Bayas', valor: 168000},
+    {nombre: 'Parque Fotovoltaico Bolero', valor: 189000},
+    {nombre: 'Cerro Paranal', valor: 204000},
+    {nombre: 'Observatorio Cerro Armazones', valor: 220500},
+    {nombre: 'Minera Zaldívar', valor: 270000},
+    {nombre: 'Tocopilla', valor: 276000},
+    {nombre: 'Minera Escondida BHP', valor: 276000},
+    {nombre: 'Faena Proyecto Antucoya', valor: 285000},
+    {nombre: 'Taltal', valor: 351000},
+  ]
+};
+
+// ── Actualizar selector de ramales cuando cambia origen/destino ──
+function actualizarRamales() {
+  const origen = document.getElementById('origen').value;
+  const destino = document.getElementById('destino').value;
+  const ramalSection = document.getElementById('ramalSection');
+  const ramalSelect = document.getElementById('ramalSelect');
+  const cargoRamalInput = document.getElementById('cargoRamal');
+  
+  // Mostrar selector solo si origen = destino y hay ramales disponibles
+  if (origen && destino && origen === destino && RAMALES[origen]) {
+    ramalSection.style.display = 'block';
+    
+    // Poblar opciones
+    ramalSelect.innerHTML = '<option value="0">Ciudad principal (sin ramal)</option>';
+    RAMALES[origen].forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.valor;
+      opt.textContent = `${r.nombre} (+$${r.valor.toLocaleString('es-CL')})`;
+      ramalSelect.appendChild(opt);
+    });
+    
+    // Limpiar cargo manual
+    cargoRamalInput.value = '';
+    cargoRamalInput.disabled = true;
+  } else {
+    ramalSection.style.display = 'none';
+    ramalSelect.innerHTML = '<option value="0">Ciudad principal (sin ramal)</option>';
+    cargoRamalInput.disabled = false;
+  }
+}
+
+// ── Aplicar valor del ramal seleccionado ──
+function aplicarRamal() {
+  const ramalSelect = document.getElementById('ramalSelect');
+  const cargoRamalInput = document.getElementById('cargoRamal');
+  cargoRamalInput.value = ramalSelect.value;
+}
+
+function fmt(n) {
+  return Math.round(n).toLocaleString('es-CL');
+}
+
+function getPrecio(t, peso) {
+  if (peso <= 1)   return {base: t.carta, tramo: 'Carta / Sobre (≤1 kg)',  key:'carta'};
+  if (peso <= 5)   return {base: t.v5,    tramo: 'Hasta 5 kg',             key:'v5'};
+  if (peso <= 10)  return {base: t.v10,   tramo: '5.1 a 10 kg',            key:'v10'};
+  if (peso <= 15)  return {base: t.v15,   tramo: '10.1 a 15 kg',           key:'v15'};
+  if (peso <= 20)  return {base: t.v20,   tramo: '15.1 a 20 kg',           key:'v20'};
+  if (peso <= 25)  return {base: t.v25,   tramo: '20.1 a 25 kg',           key:'v25'};
+  if (peso <= 30)  return {base: t.v30,   tramo: '25.1 a 30 kg',           key:'v30'};
+  if (peso <= 35)  return {base: t.v35,   tramo: '30.1 a 35 kg',           key:'v35'};
+  if (peso <= 40)  return {base: t.v40,   tramo: '35.1 a 40 kg',           key:'v40'};
+  if (peso <= 45)  return {base: t.v45,   tramo: '40.1 a 45 kg',           key:'v45'};
+  if (peso <= 50)  return {base: t.v50,   tramo: '45.1 a 50 kg',           key:'v50'};
+  
+  // Exceso sobre 50kg
+  const base = t.v50;
+  const kgExtra = peso - 50;
+  let exceso_kg, exceso_label;
+  if (kgExtra <= 100) {         // hasta 100kg de exceso → tarifa "hasta 100kg"
+    exceso_kg = t.e100;
+    exceso_label = `exceso hasta 100 kg ($${fmt(exceso_kg)}/kg)`;
+  } else if (kgExtra <= 500) {  // hasta 500kg de exceso → tarifa "hasta 500kg"
+    exceso_kg = t.e500;
+    exceso_label = `exceso hasta 500 kg ($${fmt(exceso_kg)}/kg)`;
+  } else {                      // más de 500kg de exceso → tarifa "sobre 500kg"
+    exceso_kg = t.e500p;
+    exceso_label = `exceso sobre 500 kg ($${fmt(exceso_kg)}/kg)`;
+  }
+  const total = base + kgExtra * exceso_kg;
+  return {base: total, tramo: `Base 50kg + ${kgExtra.toFixed(1)}kg × ${exceso_label}`, key:'exceso', exceso_kg, base50: base};
+}
+
+function calcular() {
+  const origen  = document.getElementById('origen').value;
+  const destino = document.getElementById('destino').value;
+  const pr      = parseFloat(document.getElementById('pesoReal').value) || 0;
+  const pv      = parseFloat(document.getElementById('pesoVol').value)  || 0;
+  const desc    = document.getElementById('descuento').checked;
+
+  const errorBox = document.getElementById('errorBox');
+
+  // Validaciones
+  if (!origen || !destino) {
+    errorBox.textContent = 'Selecciona origen y destino.';
+    errorBox.classList.add('visible');
+    return;
+  }
+  if (pr === 0 && pv === 0) {
+    errorBox.textContent = 'Ingresa al menos un peso (real o volumétrico).';
+    errorBox.classList.add('visible');
+    return;
+  }
+  errorBox.classList.remove('visible');
+
+  const t = TARIFAS[origen] && TARIFAS[origen][destino];
+  if (!t) {
+    errorBox.textContent = `Ruta "${NOMBRES_ORIGEN[origen] || origen} → ${NOMBRES_DESTINO[destino] || destino}" no está disponible en el tarifario 2026.`;
+    errorBox.classList.add('visible');
+    return;
+  }
+
+  const peso = Math.max(pr, pv);
+  const tipoPeso = pr >= pv ? 'Real' : 'Volumétrico';
+  const res = getPrecio(t, peso);
+  const factor = desc ? 0.80 : 1.0;
+  const cargoRamalBase = parseFloat(document.getElementById('cargoRamal').value) || 0;
+  const cargoRamalFinal = cargoRamalBase * factor;
+  const precioFinal = res.base * factor + cargoRamalFinal;
+
+  // Mostrar resultados
+  document.getElementById('emptyState').style.display = 'none';
+
+  // Hero
+  document.getElementById('resOrigen').textContent  = NOMBRES_ORIGEN[origen]  || origen;
+  document.getElementById('resDestino').textContent = NOMBRES_DESTINO[destino] || destino;
+  document.getElementById('precioFinal').textContent = fmt(precioFinal);
+  
+  let labelText = desc ? 'PRECIO FINAL (con 20% desc.)' : 'PRECIO FINAL (sin descuento)';
+  if (cargoRamalBase > 0) labelText += ' + Ramal';
+  document.getElementById('priceLabel').textContent = labelText;
+
+  document.getElementById('chipPeso').textContent  = `${peso.toFixed(1)} kg ${tipoPeso}`;
+  document.getElementById('chipTramo').textContent = res.tramo;
+  
+  let chipBaseText = desc ? `Base s/desc.: $${fmt(res.base)}` : `Tarifa base`;
+  if (cargoRamalBase > 0) {
+    const tarifaSinRamal = res.base * factor;
+    chipBaseText = `Tarifa: $${fmt(tarifaSinRamal)} + Ramal c/desc: $${fmt(cargoRamalFinal)}`;
+  }
+  document.getElementById('chipBase').textContent = chipBaseText;
+
+  document.getElementById('resultHero').classList.add('visible');
+
+  // Desglose por tramos
+  const grid = document.getElementById('breakdownGrid');
+  grid.innerHTML = '';
+
+  TRAMOS.forEach(tr => {
+    const baseVal = t[tr.key];
+    const finalVal = baseVal * factor;
+    const isActive = res.key === tr.key;
+    const row = document.createElement('div');
+    row.className = `breakdown-row${isActive ? ' active' : ''}`;
+    row.innerHTML = `
+      <span class="tramo-name">${tr.label}</span>
+      <span class="tramo-base">$${fmt(baseVal)}</span>
+      <span class="tramo-final${isActive ? ' highlighted' : ''}">$${fmt(finalVal)}</span>
+    `;
+    grid.appendChild(row);
+  });
+
+  // Si hay exceso, agregar fila de excesos
+  if (res.key === 'exceso') {
+    const kgExtra = peso - 50;
+    const excLabels = ['Exceso /kg hasta 100kg','Exceso /kg hasta 500kg','Exceso /kg sobre 500kg'];
+    const excKeys   = ['e100','e500','e500p'];
+    // tramo activo según kg ADICIONALES sobre 50kg
+    const tramoActivo = kgExtra <= 100 ? 0 : kgExtra <= 500 ? 1 : 2;
+    excKeys.forEach((k, i) => {
+      const row = document.createElement('div');
+      row.className = `breakdown-row${i === tramoActivo ? ' active' : ''}`;
+      row.innerHTML = `<span class="tramo-name">${excLabels[i]}</span><span class="tramo-base">$${fmt(t[k])}/kg</span><span class="tramo-final${i === tramoActivo ? ' highlighted' : ''}">$${fmt(t[k]*factor)}/kg</span>`;
+      grid.appendChild(row);
+    });
+  }
+
+  document.getElementById('breakdown').classList.add('visible');
+
+  // Tabla comparativa
+  const cGrid = document.getElementById('compareGrid');
+  cGrid.innerHTML = '';
+
+  TRAMOS.forEach(tr => {
+    const baseVal  = t[tr.key];
+    const conDesc  = baseVal * 0.80;
+    const isActive = res.key === tr.key;
+    const row = document.createElement('div');
+    row.className = `compare-row${isActive ? ' active' : ''}`;
+    row.innerHTML = `
+      <span class="tramo-name">${tr.label}</span>
+      <span class="val-sin">$${fmt(baseVal)}</span>
+      <span class="val-con">$${fmt(conDesc)}</span>
+    `;
+    cGrid.appendChild(row);
+  });
+
+  document.getElementById('compareSection').classList.add('visible');
+}
+
+// ── Calculador de peso volumétrico ──────────────────────────
+function calcularVolumen() {
+  const alto  = parseFloat(document.getElementById('dimAlto').value)  || 0;
+  const largo = parseFloat(document.getElementById('dimLargo').value) || 0;
+  const ancho = parseFloat(document.getElementById('dimAncho').value) || 0;
+
+  const resultBox   = document.getElementById('dimResult');
+  const resultValue = document.getElementById('dimResultValue');
+  const pesoVolInput = document.getElementById('pesoVol');
+
+  if (alto > 0 && largo > 0 && ancho > 0) {
+    const volKg = (alto * largo * ancho) / 4000;
+    const rounded = Math.round(volKg * 10) / 10; // redondear a 1 decimal
+    resultValue.textContent = `${rounded.toFixed(1)} kg`;
+    resultBox.classList.add('has-value');
+    // Autocompletar el campo de peso volumétrico
+    pesoVolInput.value = rounded.toFixed(1);
+  } else {
+    resultValue.textContent = '— kg';
+    resultBox.classList.remove('has-value');
+    // Limpiar sólo si estaba calculado automáticamente (no borrar si el usuario escribió)
+    if (alto === 0 && largo === 0 && ancho === 0) {
+      pesoVolInput.value = '';
+    }
+  }
+}
+
+// Enter para calcular
+document.addEventListener('keydown', e => { if (e.key === 'Enter') calcular(); });
+
+// ── Registro PWA Service Worker ──────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('SW registrado — app disponible offline'))
+      .catch(err => console.warn('SW no registrado:', err));
+  });
+}
+</script>
+</body>
+</html>
