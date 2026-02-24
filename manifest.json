@@ -1,0 +1,25 @@
+{
+  "name": "Estimador Estafeta 2026",
+  "short_name": "Estafeta",
+  "description": "Calculadora de tarifas Estafeta 2026 con descuento corporativo SERVI-ALL",
+  "start_url": "/Estimador-Precios-Flete/",
+  "scope": "/Estimador-Precios-Flete/",
+  "display": "standalone",
+  "background_color": "#0e0f13",
+  "theme_color": "#0e0f13",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/Estimador-Precios-Flete/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/Estimador-Precios-Flete/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
