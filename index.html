@@ -301,6 +301,28 @@
   .btn-calc:hover { opacity: 0.9; }
   .btn-calc:active { transform: scale(0.99); }
 
+  /* Fila de botones + botón limpiar */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+  }
+  .btn-row .btn-calc { flex: 1; }
+  .btn-clear {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s, color 0.15s, border-color 0.15s;
+    letter-spacing: 0.2px;
+  }
+  .btn-clear:hover { color: var(--text); border-color: var(--muted); }
+  .btn-clear:active { transform: scale(0.99); }
+
   /* Panel derecho - Resultados */
   .results-panel {
     padding: 28px 32px;
@@ -683,7 +705,10 @@
       </div>
     </div>
 
-    <button class="btn-calc" onclick="calcular()">Calcular tarifa</button>
+    <div class="btn-row">
+      <button class="btn-calc" onclick="calcular()">Calcular tarifa</button>
+      <button class="btn-clear" onclick="limpiar()" type="button" title="Limpiar y hacer una nueva búsqueda">Limpiar</button>
+    </div>
 
     <div class="error-box" id="errorBox"></div>
 
@@ -1705,6 +1730,37 @@ function calcular() {
   });
 
   document.getElementById('compareSection').classList.add('visible');
+}
+
+// ── Limpiar formulario para una nueva búsqueda ──────────────
+function limpiar() {
+  document.getElementById('origen').value = '';
+  document.getElementById('destino').value = '';
+  document.getElementById('pesoReal').value = '';
+  document.getElementById('pesoVol').value = '';
+  document.getElementById('dimAlto').value = '';
+  document.getElementById('dimLargo').value = '';
+  document.getElementById('dimAncho').value = '';
+  document.getElementById('cargoRamal').value = '';
+  document.getElementById('descuento').checked = true;
+
+  const dimResult = document.getElementById('dimResult');
+  dimResult.classList.remove('has-value');
+  document.getElementById('dimResultValue').textContent = '— kg';
+
+  ramalSeleccionado = null;
+  actualizarRamales(); // oculta/repuebla el selector de ramal según origen/destino vacíos
+
+  const errorBox = document.getElementById('errorBox');
+  errorBox.textContent = '';
+  errorBox.classList.remove('visible');
+
+  document.getElementById('resultHero').classList.remove('visible');
+  document.getElementById('breakdown').classList.remove('visible');
+  document.getElementById('compareSection').classList.remove('visible');
+  document.getElementById('emptyState').style.display = 'flex';
+
+  document.getElementById('origen').focus();
 }
 
 // ── Calculador de peso volumétrico ──────────────────────────
