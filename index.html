@@ -160,6 +160,83 @@
     font-size: 12px;
   }
 
+  /* Buscador de destino (combobox) */
+  .combo { position: relative; }
+  .combo input { padding-right: 40px; }
+  .combo-btn {
+    position: absolute;
+    right: 6px; top: 50%;
+    transform: translateY(-50%);
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .combo-btn:hover { color: var(--text); background: var(--border); }
+  .combo.abierto .combo-btn { transform: translateY(-50%) rotate(180deg); }
+
+  .combo-lista {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0; right: 0;
+    z-index: 40;
+    max-height: 300px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
+  .combo.abierto .combo-lista { display: block; }
+
+  .combo-grupo {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 7px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .combo-opt {
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .combo-opt:hover, .combo-opt.activo { background: var(--border); }
+  .combo-opt.elegido { color: var(--accent); }
+  .combo-opt mark {
+    background: rgba(232, 255, 71, 0.22);
+    color: inherit;
+    border-radius: 2px;
+  }
+  .combo-opt .combo-opt-sub {
+    font-size: 11px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .combo-vacio {
+    padding: 16px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+  }
+
   .divider {
     display: flex;
     align-items: center;
@@ -608,8 +685,17 @@
       </div>
 
       <div class="field-group">
-        <label>Ciudad de destino</label>
-        <div class="select-wrap">
+        <label>Ciudad de destino <span style="color:var(--muted); font-size:11px;">(ciudad o ramal)</span></label>
+        <!-- Buscador: el <select> de abajo queda oculto y sigue siendo la fuente
+             de datos y el valor real que lee calcular(). -->
+        <div class="combo" id="destinoCombo">
+          <input type="text" id="destinoBuscar" autocomplete="off" spellcheck="false"
+                 placeholder="Buscar destino..." role="combobox"
+                 aria-expanded="false" aria-controls="destinoLista" aria-autocomplete="list">
+          <button type="button" class="combo-btn" id="destinoBtn" aria-label="Abrir lista de destinos">▾</button>
+          <div class="combo-lista" id="destinoLista" role="listbox"></div>
+        </div>
+        <div class="select-wrap" hidden>
           <select id="destino" onchange="actualizarRuta()">
             <option value="">Seleccionar destino...</option>
             <optgroup label="Ciudades principales" id="grupoCiudades">
@@ -1598,6 +1684,162 @@ function poblarRamalesEnDestino() {
 }
 poblarRamalesEnDestino();
 
+// ── Buscador del selector de destino ───────────────────────────────────────
+//
+// Con 295 opciones el <select> nativo se volvió incómodo de recorrer, sobre
+// todo en el celular. El <select> sigue existiendo oculto (es la fuente de
+// datos y guarda el valor que lee calcular()); encima va un buscador que
+// filtra y escribe en él. Así el resto del código no cambia.
+
+// Quita tildes y mayúsculas: "Peñón" y "penon" deben encontrarse igual.
+function normalizar(s) {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+// Aplana el <select> a una lista buscable
+const DESTINOS = (() => {
+  const lista = [];
+  for (const opt of document.getElementById('destino').options) {
+    if (!opt.value) continue;
+    const grupo = opt.parentElement.label || '';
+    lista.push({
+      value: opt.value,
+      label: opt.textContent,
+      grupo,
+      // Se busca también por cabecera: escribir "antofagasta" trae sus ramales.
+      busq: normalizar(opt.textContent + ' ' + grupo)
+    });
+  }
+  return lista;
+})();
+
+const combo       = document.getElementById('destinoCombo');
+const comboInput  = document.getElementById('destinoBuscar');
+const comboLista  = document.getElementById('destinoLista');
+const comboBtn    = document.getElementById('destinoBtn');
+const selectDest  = document.getElementById('destino');
+let comboActivo   = -1;      // índice resaltado con las flechas
+let comboVisibles = [];      // resultados actualmente pintados
+
+function comboAbierto() { return combo.classList.contains('abierto'); }
+
+function resaltar(texto, termino) {
+  if (!termino) return texto;
+  const i = normalizar(texto).indexOf(termino);
+  if (i < 0) return texto;
+  const esc = t => t.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  return esc(texto.slice(0, i)) + '<mark>' + esc(texto.slice(i, i + termino.length)) +
+         '</mark>' + esc(texto.slice(i + termino.length));
+}
+
+function pintarLista(filtro) {
+  const q = normalizar(filtro);
+  // Con el campo vacío se muestra todo; si no, coincidencias por nombre o cabecera.
+  comboVisibles = q ? DESTINOS.filter(d => d.busq.includes(q)) : DESTINOS.slice();
+  comboLista.innerHTML = '';
+
+  if (!comboVisibles.length) {
+    comboLista.innerHTML = '<div class="combo-vacio">Sin resultados para ese destino</div>';
+    return;
+  }
+
+  let grupoActual = null;
+  comboVisibles.forEach((d, i) => {
+    if (d.grupo !== grupoActual) {
+      grupoActual = d.grupo;
+      const g = document.createElement('div');
+      g.className = 'combo-grupo';
+      g.textContent = d.grupo;
+      comboLista.appendChild(g);
+    }
+    const el = document.createElement('div');
+    el.className = 'combo-opt' + (i === comboActivo ? ' activo' : '') +
+                   (d.value === selectDest.value ? ' elegido' : '');
+    el.setAttribute('role', 'option');
+    el.dataset.i = i;
+    const ramal = RAMAL_INDEX[d.value];
+    el.innerHTML = `<span>${resaltar(d.label, q)}</span>` +
+      (ramal ? `<span class="combo-opt-sub">ramal</span>` : '');
+    el.addEventListener('mousedown', ev => { ev.preventDefault(); elegirDestino(i); });
+    comboLista.appendChild(el);
+  });
+}
+
+function abrirCombo(filtro = '') {
+  comboActivo = -1;
+  pintarLista(filtro);
+  combo.classList.add('abierto');
+  comboInput.setAttribute('aria-expanded', 'true');
+}
+
+function cerrarCombo() {
+  combo.classList.remove('abierto');
+  comboInput.setAttribute('aria-expanded', 'false');
+  comboActivo = -1;
+  // Si quedó texto escrito sin elegir nada, se restaura la etiqueta vigente.
+  comboInput.value = etiquetaDestino();
+}
+
+function etiquetaDestino() {
+  const d = DESTINOS.find(x => x.value === selectDest.value);
+  return d ? d.label : '';
+}
+
+function elegirDestino(i) {
+  const d = comboVisibles[i];
+  if (!d) return;
+  selectDest.value = d.value;
+  comboInput.value = d.label;
+  cerrarCombo();
+  actualizarRuta();
+}
+
+function moverActivo(paso) {
+  if (!comboVisibles.length) return;
+  comboActivo = (comboActivo + paso + comboVisibles.length) % comboVisibles.length;
+  pintarLista(comboInput.value === etiquetaDestino() ? '' : comboInput.value);
+  const el = comboLista.querySelector(`.combo-opt[data-i="${comboActivo}"]`);
+  if (el) el.scrollIntoView({block: 'nearest'});
+}
+
+comboInput.addEventListener('focus', () => { comboInput.select(); abrirCombo(''); });
+comboInput.addEventListener('input', () => abrirCombo(comboInput.value));
+
+comboBtn.addEventListener('mousedown', ev => {
+  ev.preventDefault();
+  if (comboAbierto()) cerrarCombo();
+  else { comboInput.focus(); abrirCombo(''); }
+});
+
+comboInput.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (!comboAbierto()) abrirCombo('');
+    else moverActivo(e.key === 'ArrowDown' ? 1 : -1);
+    return;
+  }
+  if (e.key === 'Enter') {
+    if (comboAbierto()) {
+      // Con un solo resultado, Enter lo toma aunque no se haya bajado a él.
+      const i = comboActivo >= 0 ? comboActivo : (comboVisibles.length === 1 ? 0 : -1);
+      if (i >= 0) {
+        e.preventDefault();
+        e.stopPropagation();   // no dispares calcular() con la lista abierta
+        elegirDestino(i);
+        return;
+      }
+      cerrarCombo();
+      e.stopPropagation();
+    }
+    return;
+  }
+  if (e.key === 'Escape' && comboAbierto()) { e.stopPropagation(); cerrarCombo(); }
+});
+
+document.addEventListener('click', e => {
+  if (comboAbierto() && !combo.contains(e.target)) cerrarCombo();
+});
+
 // ── Avisar cómo se está tarificando la ruta elegida ────────────────────────
 function actualizarRuta() {
   const origen  = document.getElementById('origen').value;
@@ -1807,6 +2049,8 @@ function limpiar() {
   document.getElementById('dimResultValue').textContent = '— kg';
 
   document.getElementById('cargoRamal').disabled = false;
+  comboInput.value = '';        // el buscador de destino también se vacía
+  cerrarCombo();
   actualizarRuta(); // oculta el aviso de ramal al quedar la ruta vacía
 
   const errorBox = document.getElementById('errorBox');
