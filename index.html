@@ -545,6 +545,20 @@
     display: none;
   }
   .error-box.visible { display: block; }
+
+  /* Aviso de tarificación de ramal */
+  .ruta-info {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: rgba(71, 200, 255, 0.07);
+    border: 1px solid rgba(71, 200, 255, 0.25);
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .ruta-info b { color: var(--accent2); font-weight: 600; }
+  .ruta-info .ruta-info-sub { color: var(--muted); }
 </style>
 </head>
 <body>
@@ -566,7 +580,7 @@
       <div class="field-group">
         <label>Ciudad de origen</label>
         <div class="select-wrap">
-          <select id="origen" onchange="actualizarRamales()">
+          <select id="origen" onchange="actualizarRuta()">
             <option value="">Seleccionar origen...</option>
             <option value="SANTIAGO">Santiago</option>
             <option value="ANTOFAGASTA">Antofagasta</option>
@@ -596,8 +610,9 @@
       <div class="field-group">
         <label>Ciudad de destino</label>
         <div class="select-wrap">
-          <select id="destino" onchange="actualizarRamales()">
+          <select id="destino" onchange="actualizarRuta()">
             <option value="">Seleccionar destino...</option>
+            <optgroup label="Ciudades principales" id="grupoCiudades">
             <option value="SANTIAGO">Santiago</option>
             <option value="ANTOFAGASTA">Antofagasta</option>
             <option value="IQUIQUE">Iquique</option>
@@ -618,19 +633,14 @@
             <option value="ARICA">Arica</option>
             <option value="COYHAIQUE">Coyhaique</option>
             <option value="PUNTA_ARENAS">Punta Arenas</option>
+            </optgroup>
+            <!-- Los ramales se agregan aquí por JS (poblarRamalesEnDestino) -->
           </select>
         </div>
       </div>
 
-      <!-- Selector de ramales (aparece solo cuando origen=destino) -->
-      <div class="field-group" id="ramalSection" style="display:none; margin-top:12px;">
-        <label>Destino específico (ramal)</label>
-        <div class="select-wrap">
-          <select id="ramalSelect" onchange="aplicarRamal()">
-            <option value="0">Ciudad principal (sin ramal)</option>
-          </select>
-        </div>
-      </div>
+      <!-- Aviso de cómo se está tarificando un ramal -->
+      <div id="rutaInfo" class="ruta-info" style="display:none;"></div>
     </div>
 
     <div class="panel-section">
@@ -1514,58 +1524,104 @@ const RAMALES = {
   ],
 };
 
-// ── Actualizar selector de ramales cuando cambia origen/destino ──
-// Ramal actualmente elegido en el selector (objeto de RAMALES[origen], o null)
-let ramalSeleccionado = null;
+// ── Descomposición de los ramales en "tarifa base + recargo fijo" ──────────
+//
+// Cada tarifa de ramal del Excel oficial resulta ser, exactamente, la tarifa
+// de una ciudad base vista desde su cabecera MÁS un recargo fijo que no varía
+// entre tramos de peso. Ejemplo (Mejillones, ramal de Antofagasta):
+//
+//   Antofagasta → Antofagasta   carta 4.376   v5 6.759   v10 7.519 ...
+//   Antofagasta → Mejillones    carta 38.592  v5 40.975  v10 41.735 ...
+//   diferencia                        34.216       34.216      34.216
+//
+// Ese recargo es el tramo final hasta el ramal, y es independiente de desde
+// dónde venga el envío. Por eso un Santiago → Mejillones se tarifica como
+// (Santiago → Antofagasta) + 34.216, y cuando el origen es la propia cabecera
+// se reobtiene exactamente la tarifa oficial del Excel.
+//
+// La descomposición se calcula al cargar en vez de escribirla a mano: si
+// mañana se actualizan TARIFAS o RAMALES, los recargos se recalculan solos.
+const CLAVES_PESO = ['carta','v5','v10','v15','v20','v25','v30','v35','v40','v45','v50'];
+const CLAVES_KG   = ['e100','e500','e500p'];
 
-function actualizarRamales() {
-  const origen = document.getElementById('origen').value;
-  const destino = document.getElementById('destino').value;
-  const ramalSection = document.getElementById('ramalSection');
-  const ramalSelect = document.getElementById('ramalSelect');
-  const cargoRamalInput = document.getElementById('cargoRamal');
+// destinoValue ("R:ANTOFAGASTA:6") → {cabecera, base, recargo, nombre}
+const RAMAL_INDEX = {};
 
-  ramalSeleccionado = null;
+(function construirIndiceRamales() {
+  for (const cabecera of Object.keys(RAMALES)) {
+    RAMALES[cabecera].forEach((r, i) => {
+      const clave = `R:${cabecera}:${i}`;
 
-  // Mostrar selector solo si origen = destino y hay ramales disponibles
-  if (origen && destino && origen === destino && RAMALES[origen]) {
-    ramalSection.style.display = 'block';
+      // Ramales sin matriz propia: el "valor" ya es el recargo sobre la local.
+      if (!r.tarifa) {
+        RAMAL_INDEX[clave] = {cabecera, base: cabecera, recargo: r.valor, nombre: r.nombre};
+        return;
+      }
 
-    // Poblar opciones (value = indice dentro de RAMALES[origen])
-    ramalSelect.innerHTML = '<option value="-1">Ciudad principal (sin ramal)</option>';
-    RAMALES[origen].forEach((r, i) => {
-      const opt = document.createElement('option');
-      opt.value = i;
-      // Los ramales con tarifa directa del Excel oficial no son un "+cargo"
-      // sobre la tarifa local: son un precio propio, distinto tramo a tramo.
-      opt.textContent = r.tarifa
-        ? r.nombre
-        : `${r.nombre} (+$${r.valor.toLocaleString('es-CL')})`;
-      ramalSelect.appendChild(opt);
+      // Buscar de qué ciudad base cuelga: la única cuya diferencia es
+      // constante en los 11 tramos y cuyos $/kg de exceso coinciden.
+      for (const base of Object.keys(TARIFAS[cabecera])) {
+        const t = TARIFAS[cabecera][base];
+        if (!CLAVES_KG.every(k => r.tarifa[k] === t[k])) continue;
+        const d = CLAVES_PESO.map(k => r.tarifa[k] - t[k]);
+        const min = Math.min(...d), max = Math.max(...d);
+        if (min < 0 || max - min > 2) continue;   // tolerancia: redondeo de $1
+        RAMAL_INDEX[clave] = {
+          cabecera,
+          base,
+          recargo: Math.round(d.reduce((a, x) => a + x, 0) / d.length),
+          nombre: r.nombre
+        };
+        return;
+      }
+      console.warn(`Ramal sin base identificable: ${cabecera} / ${r.nombre}`);
     });
+  }
+})();
 
-    // Limpiar cargo manual
-    cargoRamalInput.value = '';
-    cargoRamalInput.disabled = true;
-  } else {
-    ramalSection.style.display = 'none';
-    ramalSelect.innerHTML = '<option value="-1">Ciudad principal (sin ramal)</option>';
-    cargoRamalInput.disabled = false;
+// ── Agregar todos los ramales al selector de destino ───────────────────────
+function poblarRamalesEnDestino() {
+  const destino = document.getElementById('destino');
+  for (const cabecera of Object.keys(RAMALES)) {
+    const grupo = document.createElement('optgroup');
+    grupo.label = `Ramales de ${NOMBRES_DESTINO[cabecera] || cabecera}`;
+    RAMALES[cabecera].forEach((r, i) => {
+      const clave = `R:${cabecera}:${i}`;
+      if (!RAMAL_INDEX[clave]) return;
+      const opt = document.createElement('option');
+      opt.value = clave;
+      opt.textContent = r.nombre;
+      grupo.appendChild(opt);
+    });
+    destino.appendChild(grupo);
   }
 }
+poblarRamalesEnDestino();
 
-// ── Aplicar el ramal seleccionado ──
-function aplicarRamal() {
-  const origen = document.getElementById('origen').value;
-  const ramalSelect = document.getElementById('ramalSelect');
+// ── Avisar cómo se está tarificando la ruta elegida ────────────────────────
+function actualizarRuta() {
+  const origen  = document.getElementById('origen').value;
+  const destino = document.getElementById('destino').value;
+  const info    = document.getElementById('rutaInfo');
   const cargoRamalInput = document.getElementById('cargoRamal');
-  const idx = parseInt(ramalSelect.value, 10);
-  const ramal = (idx >= 0 && RAMALES[origen]) ? RAMALES[origen][idx] : null;
+  const ramal   = RAMAL_INDEX[destino];
 
-  ramalSeleccionado = ramal;
-  // Si el ramal tiene tarifa directa, no hay cargo adicional que sumar:
-  // la tarifa del ramal YA es el precio final por tramo.
-  cargoRamalInput.value = (ramal && !ramal.tarifa) ? ramal.valor : '';
+  // Con un ramal del tarifario elegido, el recargo ya está contemplado y el
+  // campo manual sobraría: se bloquea para no cobrarlo dos veces.
+  cargoRamalInput.disabled = !!ramal;
+  if (ramal) cargoRamalInput.value = '';
+
+  if (!ramal) { info.style.display = 'none'; return; }
+
+  const nombreBase = NOMBRES_DESTINO[ramal.base] || ramal.base;
+  info.innerHTML = origen
+    ? `<b>${ramal.nombre}</b> es ramal de ${NOMBRES_DESTINO[ramal.cabecera] || ramal.cabecera}.<br>
+       <span class="ruta-info-sub">Se tarifica como ${NOMBRES_ORIGEN[origen] || origen} → ${nombreBase}
+       más el recargo de ramal de $${ramal.recargo.toLocaleString('es-CL')}.</span>`
+    : `<b>${ramal.nombre}</b> es ramal de ${NOMBRES_DESTINO[ramal.cabecera] || ramal.cabecera}.<br>
+       <span class="ruta-info-sub">Se tarifica como la ruta hasta ${nombreBase} más el recargo
+       de ramal de $${ramal.recargo.toLocaleString('es-CL')}. Selecciona un origen.</span>`;
+  info.style.display = 'block';
 }
 
 function fmt(n) {
@@ -1625,20 +1681,17 @@ function calcular() {
   }
   errorBox.classList.remove('visible');
 
-  // Si hay un ramal con tarifa directa del Excel oficial seleccionado, esa
-  // tarifa REEMPLAZA la de la ciudad principal (no se le suma un cargo:
-  // el ramal ya tiene su propio precio tramo a tramo, igual que en el
-  // Auditor Estafeta).
-  const usaTarifaDirectaRamal = !!(ramalSeleccionado && ramalSeleccionado.tarifa);
-  const t = usaTarifaDirectaRamal
-    ? ramalSeleccionado.tarifa
-    : (TARIFAS[origen] && TARIFAS[origen][destino]);
-  const destinoLabel = usaTarifaDirectaRamal
-    ? ramalSeleccionado.nombre
-    : (NOMBRES_DESTINO[destino] || destino);
+  // Si el destino es un ramal, se cotiza la ruta hasta su ciudad base y se le
+  // suma el recargo fijo del ramal (ver construirIndiceRamales). Cuando el
+  // origen es la propia cabecera esto reproduce exactamente la tarifa del
+  // Excel oficial; desde cualquier otro origen extiende la misma regla.
+  const ramal = RAMAL_INDEX[destino] || null;
+  const ciudadTarifa = ramal ? ramal.base : destino;
+  const t = TARIFAS[origen] && TARIFAS[origen][ciudadTarifa];
+  const destinoLabel = ramal ? ramal.nombre : (NOMBRES_DESTINO[destino] || destino);
 
   if (!t) {
-    errorBox.textContent = `Ruta "${NOMBRES_ORIGEN[origen] || origen} → ${NOMBRES_DESTINO[destino] || destino}" no está disponible en el tarifario 2026.`;
+    errorBox.textContent = `Ruta "${NOMBRES_ORIGEN[origen] || origen} → ${destinoLabel}" no está disponible en el tarifario 2026.`;
     errorBox.classList.add('visible');
     return;
   }
@@ -1647,7 +1700,10 @@ function calcular() {
   const tipoPeso = pr >= pv ? 'Real' : 'Volumétrico';
   const res = getPrecio(t, peso);
   const factor = desc ? 0.80 : 1.0;
-  const cargoRamalBase = usaTarifaDirectaRamal ? 0 : (parseFloat(document.getElementById('cargoRamal').value) || 0);
+  // Recargo del ramal elegido, o el cargo manual para ramales fuera del tarifario.
+  const cargoRamalBase = ramal
+    ? ramal.recargo
+    : (parseFloat(document.getElementById('cargoRamal').value) || 0);
   const cargoRamalFinal = cargoRamalBase * factor;
   const precioFinal = res.base * factor + cargoRamalFinal;
 
@@ -1660,8 +1716,8 @@ function calcular() {
   document.getElementById('precioFinal').textContent = fmt(precioFinal);
 
   let labelText = desc ? 'PRECIO FINAL (con 20% desc.)' : 'PRECIO FINAL (sin descuento)';
-  if (cargoRamalBase > 0) labelText += ' + Ramal';
-  else if (usaTarifaDirectaRamal) labelText += ` — Ramal ${ramalSeleccionado.nombre}`;
+  if (ramal) labelText += ` — vía ${NOMBRES_DESTINO[ramal.base] || ramal.base} + ramal`;
+  else if (cargoRamalBase > 0) labelText += ' + Ramal';
   document.getElementById('priceLabel').textContent = labelText;
 
   document.getElementById('chipPeso').textContent  = `${peso.toFixed(1)} kg ${tipoPeso}`;
@@ -1681,7 +1737,9 @@ function calcular() {
   grid.innerHTML = '';
 
   TRAMOS.forEach(tr => {
-    const baseVal = t[tr.key];
+    // El recargo del ramal se suma en todos los tramos: así el desglose
+    // cuadra con el precio del hero y no muestra la tarifa de la ciudad base.
+    const baseVal = t[tr.key] + cargoRamalBase;
     const finalVal = baseVal * factor;
     const isActive = res.key === tr.key;
     const row = document.createElement('div');
@@ -1716,7 +1774,7 @@ function calcular() {
   cGrid.innerHTML = '';
 
   TRAMOS.forEach(tr => {
-    const baseVal  = t[tr.key];
+    const baseVal  = t[tr.key] + cargoRamalBase;
     const conDesc  = baseVal * 0.80;
     const isActive = res.key === tr.key;
     const row = document.createElement('div');
@@ -1748,8 +1806,8 @@ function limpiar() {
   dimResult.classList.remove('has-value');
   document.getElementById('dimResultValue').textContent = '— kg';
 
-  ramalSeleccionado = null;
-  actualizarRamales(); // oculta/repuebla el selector de ramal según origen/destino vacíos
+  document.getElementById('cargoRamal').disabled = false;
+  actualizarRuta(); // oculta el aviso de ramal al quedar la ruta vacía
 
   const errorBox = document.getElementById('errorBox');
   errorBox.textContent = '';
